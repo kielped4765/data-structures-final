@@ -33,3 +33,29 @@ ChainedHashTable::~ChainedHashTable() {
         }
     }
 }
+
+// uses a hash function to turn the key into a bucket index within the table size
+size_t ChainedHashTable::hashFunction(const std::string& key) const {
+    // creates our hash object for strings using the variable hasher
+    std::hash<std::string> hasher;
+    // hashes the key and compresses the result into a valid bucket index and returns that compressed bucket index
+    return hasher(key) % bucketCount;
+}
+
+// inserts a flight record into the chosen bucket array
+void ChainedHashTable::insertIntoBuckets(std::vector<Node*>& targetBuckets, size_t targetBucketCount, const FlightRecord& record) {
+    // create a hash object for strings
+    std::hash<std::string> hasher;
+
+    // hash the aircraft ID and compress it into a valid bucket index
+    size_t index = hasher(record.aircraftID) % targetBucketCount;
+    
+    // creates a new node in dynamic memory to store the flight record
+    Node* newNode = new Node{record, nullptr};
+    
+    // points the new node to the current first node (targetBuckets[index]) in the bucket chain 
+    newNode->next = targetBuckets[index];
+
+    // makes the bucket point to the new node so it becomes the new front
+    targetBuckets[index] = newNode;
+}
