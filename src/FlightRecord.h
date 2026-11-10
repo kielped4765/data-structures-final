@@ -3,6 +3,7 @@
 
 #include <string>
 
+// Stores one aerospace flight record. This is our blueprint for inserting data in our cpp file.
 struct FlightRecord {
     std::string aircraftID;
     int altitude;
