@@ -59,3 +59,38 @@ void ChainedHashTable::insertIntoBuckets(std::vector<Node*>& targetBuckets, size
     // makes the bucket point to the new node so it becomes the new front
     targetBuckets[index] = newNode;
 }
+
+// insert function for adding a new flight record to the hash table
+void ChainedHashTable::insert(const FlightRecord& record) {
+
+    // if rehashing is already happening, insert into the new bucket array and not the old bucket array
+    if (rehashing) {
+        insertIntoBuckets(newBuckets, newBucketCount, record);
+    }
+
+    // Otherwise, insert into current bucket array
+    else {
+        insertIntoBuckets(buckets, bucketCount, record);
+    }
+
+    // Increase the total number of stored records
+    itemCount++;
+
+    // If the table is getting too full, start rehashing
+    if (!rehashing && loadFactor() > 0.6) {
+        startRehashing();
+    }
+}
+
+// Checks and returns how full the hash table currently is
+double ChainedHashTable::loadFactor() const {
+    return static_cast<double>(itemCount) / bucketCount;
+}
+
+// Starts the incremental rehashing process by creating a larger new bucket array
+void ChainedHashTable::startRehashing() {
+    rehashing = true;
+    rehashIndex = 0;
+    newBucketCount = bucketCount * 2;
+    newBuckets.resize(newBucketCount, nullptr);
+}
