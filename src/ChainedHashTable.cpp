@@ -78,19 +78,82 @@ void ChainedHashTable::insert(const FlightRecord& record) {
 
     // If the table is getting too full, start rehashing
     if (!rehashing && loadFactor() > 0.6) {
-        startRehashing();
+        incrementalRehashing();
     }
 }
 
-// Checks and returns how full the hash table currently is
+// checks and returns how full the hash table currently is
 double ChainedHashTable::loadFactor() const {
     return static_cast<double>(itemCount) / bucketCount;
 }
 
-// Starts the incremental rehashing process by creating a larger new bucket array
-void ChainedHashTable::startRehashing() {
+// starts the incremental rehashing process by creating a larger new bucket array
+void ChainedHashTable::incrementalRehashing() {
     rehashing = true;
     rehashIndex = 0;
     newBucketCount = bucketCount * 2;
     newBuckets.resize(newBucketCount, nullptr);
+}
+
+// moves one bucket from the old table to the new table during incremental rehashing
+void ChainedHashTable::moveOneBucket() {
+
+    // if rehashing is not happening, there is no need to move anything
+    if (!rehashing) {
+        return;
+    }
+
+    // if all buckets have already been moved, then we finish rehashing
+    if (rehashIndex >= bucketCount) {
+        buckets = newBuckets;
+        bucketCount = newBucketCount;
+        newBuckets.clear();
+        newBucketCount = 0;
+        rehashing = false;
+        rehashIndex = 0;
+        return;
+    }
+
+    // if still needing to move, move every node from the current bucket into the new table
+    Node* current = buckets[rehashIndex];
+    while (current != nullptr) {
+        Node* nextNode = current->next;
+        insertIntoBuckets(newBuckets, newBucketCount, current->record);
+        delete current;
+        current = nextNode;
+    }
+
+    // mark the old bucket as empty after moving its nodes
+    buckets[rehashIndex] = nullptr;
+
+    // move to the next bucket for the next rehash step
+    rehashIndex++; 
+
+}
+
+// searching for aq flight record by aircraft ID
+bool ChainedHashTable::find(const std::string& aircraftID, FlightRecord& outRecord) const {
+
+    // hash the aircraft ID to find the correct bucket
+    size_t index = hashFunction(aircraftID);
+
+    // start at the first node in the bucket
+    Node* current = buckets[index];
+
+    // walk through the chain until we reach the end
+    while (current != nullptr) {
+
+        // check whether this node matches the aircraft ID we are looking for
+        if (current->record.aircraftID == aircraftID) {
+
+            // copy the found record into the output parameter
+            outRecord = current->record;
+            return true;
+        }
+
+        // move to the next node in the chain
+        current = current->next;
+    }
+
+    return false;
 }
