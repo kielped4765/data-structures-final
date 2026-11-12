@@ -23,6 +23,7 @@ class ChainedHashTable {
         std::vector<Node*> newBuckets;
         size_t newBucketCount;
 
+
         // converts a key into a new bucket index
         size_t hashFunction(const std::string& key) const;
 
@@ -31,7 +32,7 @@ class ChainedHashTable {
         // moving one bucket from the old table to a new table during incremental rehashing
         void moveOneBucket();
         // starts the incremental rehashing process
-        void startRehashing();
+        void incrementalRehashing();
 
     // fields that can be utilized and modified in other functions and files.
     public:
@@ -47,6 +48,7 @@ class ChainedHashTable {
         bool remove(const std::string& aircraftID);
         bool update(const std::string& aircraftID, const FlightRecord& updatedRecord);
         double loadFactor() const;
+        void display() const;
 };
 
 #endif

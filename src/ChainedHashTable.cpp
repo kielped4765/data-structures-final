@@ -65,6 +65,7 @@ void ChainedHashTable::insert(const FlightRecord& record) {
 
     // if rehashing is already happening, insert into the new bucket array and not the old bucket array
     if (rehashing) {
+        moveOneBucket();
         insertIntoBuckets(newBuckets, newBucketCount, record);
     }
 
@@ -134,20 +135,137 @@ void ChainedHashTable::moveOneBucket() {
 // searching for aq flight record by aircraft ID
 bool ChainedHashTable::find(const std::string& aircraftID, FlightRecord& outRecord) const {
 
-    // hash the aircraft ID to find the correct bucket
+    // check the new table first if rehashing is in progress
+    if (rehashing) {
+        size_t newIndex = std::hash<std::string>{}(aircraftID) % newBucketCount;
+        Node* current = newBuckets[newIndex];
+
+        // walk through the chain in the new table
+        while (current != nullptr) {
+            if (current->record.aircraftID == aircraftID) {
+                outRecord = current->record;
+                return true;
+            }
+
+            current = current->next;
+        }
+    }
+
+    // hash the aircraft ID to find the correct bcket in the current table
     size_t index = hashFunction(aircraftID);
 
     // start at the first node in the bucket
     Node* current = buckets[index];
 
-    // walk through the chain until we reach the end
+    // walk through the chain in the current table
+    while (current != nullptr) {
+        if (current->record.aircraftID == aircraftID) {
+            outRecord = current->record;
+            return true;
+        }
+
+        current = current->next;
+    }
+
+    return false;
+}
+ 
+// removes a flight record from the hash table by aircraft ID
+bool ChainedHashTable::remove(const std::string& aircraftID) {
+
+    // if rehashing is happening, try removing from new table first
+    if (rehashing) {
+        size_t newIndex = std::hash<std::string>{}(aircraftID) %  newBucketCount;
+        Node* current = newBuckets[newIndex];
+        Node* previous = nullptr;
+
+        while (current!= nullptr) {
+            if (current->record.aircraftID == aircraftID) {
+                if (previous == nullptr) {
+                    newBuckets[newIndex] = current->next;
+                } else {
+                    previous->next = current->next;
+                }
+
+                delete current;
+                itemCount--;
+                return true;
+            }
+
+            previous = current;
+            current = current->next;
+        }
+    }
+    // find the bucket where this aircraft ID should be stored
+    size_t index = hashFunction(aircraftID);
+
+    // start at the first node in the chain
+    Node* current = buckets[index];
+    Node* previous = nullptr;
+
+    // walk through the chain until the record is found or chain ends
     while (current != nullptr) {
 
-        // check whether this node matches the aircraft ID we are looking for
+        // check whether the current node mathces the aircraft ID
         if (current->record.aircraftID == aircraftID) {
 
-            // copy the found record into the output parameter
-            outRecord = current->record;
+            // if this is the first node in the chain, move the bucket head forward
+            if (previous == nullptr) {
+                buckets[index] = current->next;
+            }
+
+            // otherwise, skip over current node in the chain
+            else {
+                previous->next = current->next;
+            }
+
+            // delete the removed node and update the item count
+            delete current;
+            itemCount--;
+            return true;
+        }
+
+        // move forward in the chain
+        previous = current;
+        current = current->next;
+    }
+
+    // return false if the record was not found
+    return false;
+}
+
+// updates an existing flight record by aircraft ID
+bool ChainedHashTable::update(const std::string& aircraftID, const FlightRecord& updatedRecord) {
+
+    // if rehashing is happening, check the new table first
+    if (rehashing) {
+        size_t newIndex = std::hash<std::string>{}(aircraftID) % newBucketCount;
+        Node* current = newBuckets[newIndex];
+
+        while (current != nullptr) {
+            if (current->record.aircraftID == aircraftID) {
+                current->record = updatedRecord;
+                return true;
+            }
+
+            current = current->next;
+        }
+    }
+
+    // find the bucket where this aircraftID should be stored
+    size_t index = hashFunction(aircraftID);
+
+    // start at the first node in the chain
+    Node* current = buckets[index];
+
+    // walk through the chain until the record is found or the chain ends
+    while (current != nullptr) {
+
+        // check whether the current node matches the aircraft ID
+        if (current->record.aircraftID == aircraftID) {
+
+            // replace the old record with the updated one
+            current->record = updatedRecord;
             return true;
         }
 
@@ -155,5 +273,32 @@ bool ChainedHashTable::find(const std::string& aircraftID, FlightRecord& outReco
         current = current->next;
     }
 
+    // return false if the record is not found
     return false;
+}
+
+// displays all buckets and the records stored in their chains. Meant to help with debugging
+void ChainedHashTable::display() const {
+
+    // loop through every bucket in the hash table
+    for (size_t i = 0; i < bucketCount; i++) {
+        std::cout << "Bucket " << i << " : ";
+
+        // start at first node in bucket chain
+        Node* current = buckets[i];
+
+        // walk through the chain until the end and print flight record data
+        while (current != nullptr) {
+            std::cout << "[" << current->record.aircraftID
+                      << ", Alt: " << current->record.altitude
+                      << ", Speed: " << current->record.speed
+                      << ", Status: " << current->record.status
+                      << ", Health: " << current->record.healthCheck << "] -> ";
+
+            current = current->next;
+        }
+
+        // show the end of the chain
+        std::cout << "nullptr" << std::endl;
+    }
 }
