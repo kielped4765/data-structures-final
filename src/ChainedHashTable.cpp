@@ -2,7 +2,7 @@
 #include <iostream>
 #include <functional>
 
-// Consturctor set-up: Setting up the hash table with an inital number of empty buckets
+// Constructor set-up: Setting up the hash table with an inital number of empty buckets
 ChainedHashTable::ChainedHashTable(size_t initialBucketCount)
    : buckets(initialBucketCount, nullptr),  // creating the bucket array and starting each bucket as empty
     bucketCount(initialBucketCount),
@@ -12,7 +12,7 @@ ChainedHashTable::ChainedHashTable(size_t initialBucketCount)
     newBucketCount(0) {
     }
 
-// Deconstructor set-up: frees all dynamically allocated nodes to prevent memory leaks by removing all nodes from the hash table. 
+// Destructor set-up: frees all dynamically allocated nodes to prevent memory leaks by removing all nodes from the hash table. 
 ChainedHashTable::~ChainedHashTable() {
     // Delete every node in the current bucket array
     for (Node* bucket : buckets) {
@@ -132,7 +132,7 @@ void ChainedHashTable::moveOneBucket() {
 
 }
 
-// searching for aq flight record by aircraft ID
+// searching for a flight record by aircraft ID
 bool ChainedHashTable::find(const std::string& aircraftID, FlightRecord& outRecord) const {
 
     // check the new table first if rehashing is in progress
@@ -151,7 +151,7 @@ bool ChainedHashTable::find(const std::string& aircraftID, FlightRecord& outReco
         }
     }
 
-    // hash the aircraft ID to find the correct bcket in the current table
+    // hash the aircraft ID to find the correct bucket in the current table
     size_t index = hashFunction(aircraftID);
 
     // start at the first node in the bucket
@@ -280,6 +280,9 @@ bool ChainedHashTable::update(const std::string& aircraftID, const FlightRecord&
 // displays all buckets and the records stored in their chains. Meant to help with debugging
 void ChainedHashTable::display() const {
 
+    // print the current bucket number
+    std::cout << "Current Table:" << std::endl;
+
     // loop through every bucket in the hash table
     for (size_t i = 0; i < bucketCount; i++) {
         std::cout << "Bucket " << i << " : ";
@@ -300,5 +303,35 @@ void ChainedHashTable::display() const {
 
         // show the end of the chain
         std::cout << "nullptr" << std::endl;
+    }
+
+    // if rehashing is happening, also print the new table
+    if (rehashing) {
+        std::cout << std::endl;
+        std::cout << "New Table During Rehashing:" << std::endl;
+
+        // loop through every bucket in the new table
+        for (size_t i = 0; i < newBucketCount; i++) {
+            // print the current bucket number
+            std::cout << "Bucket " << i << ": ";
+
+            // start at first node in chain
+            Node* current = newBuckets[i];
+
+            // walk through the chain until the end and print flight record data
+            while (current != nullptr) {
+                std::cout << "[" << current->record.aircraftID
+                        << ", Alt: " << current->record.altitude
+                        << ", Speed: " << current->record.speed
+                        << ", Status: " << current->record.status
+                        << ", Health: " << current->record.healthCheck << "] -> ";
+
+                current = current->next;
+            }
+
+            // show the end of the chain
+            std::cout << "nullptr" << std::endl;
+        
+        }
     }
 }
