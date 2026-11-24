@@ -1,0 +1,25 @@
+# Build output 
+build/
+cmake-build-*/
+CmakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Compiled objects and executables
+*.o
+*.obj
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+
+# VS Code Local settings
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thums.db

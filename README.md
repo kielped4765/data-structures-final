@@ -17,7 +17,7 @@ The project is organized using CMake, which builds the executable from the sourc
 
 - Chained hash table implementation
 - Flight record storage using 'aircraftID' as the key
-- Collision handling through seperate chaining
+- Collision handling through separate chaining
 - Lookup by key
 - Update and deletion support
 - Load factor tracking
@@ -37,7 +37,7 @@ The project is organized using CMake, which builds the executable from the sourc
 - 'CMakeLists.txt'
     * Build configuration
 - 'docs/'
-    * Project notes, proposal, and support documentation
+    * Project notes, proposal, and supporting documentation
 
 ## Requirements
 
@@ -55,7 +55,7 @@ The project is organized using CMake, which builds the executable from the sourc
 4. Run CMake to configure the project"
     'cmake ..'
 5. Build the executable:
-    'cmake -- build .'
+    'cmake --build .'
 
 ## Run Instructions
 
